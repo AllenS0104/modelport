@@ -39,7 +39,7 @@ export function AuthLayout({ children }: AuthLayoutProps) {
         <nav aria-label={t('Navigation')}>
           <a href='/h5/#models'>{t('Model Square')}</a>
           <a href='/h5/#guide'>{t('Docs')}</a>
-          <a href='/h5/#chat'>{t('Chat')}</a>
+          <a href='/dashboard/models'>{t('Dashboard')}</a>
         </nav>
       </header>
       <main className='modelport-auth-card'>

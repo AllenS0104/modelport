@@ -31,6 +31,7 @@ import {
 import { Skeleton } from '@/components/ui/skeleton'
 import { TitledCard } from '@/components/ui/titled-card'
 import { useProfile } from '@/features/profile/hooks/use-profile'
+import { ROLE } from '@/lib/roles'
 
 import { AccessTokenCard } from './components/access-token-card'
 import { AccountActionCard } from './components/account-action-card'
@@ -70,6 +71,16 @@ export function Security() {
           {t('Retry')}
         </Button>
       </Empty>
+    )
+  } else if (!(profile.role >= ROLE.ADMIN)) {
+    // Presentation only: the backend independently enforces the same policy.
+    content = (
+      <AccountActionCard
+        action='password'
+        username={profile.username}
+        hasPassword={profile.has_password}
+        onUpdate={refreshProfile}
+      />
     )
   } else {
     content = (

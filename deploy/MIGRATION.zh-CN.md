@@ -68,10 +68,10 @@ cd ../..
 python3 console/build.py
 # 新的离线构建目录中操作，不覆盖在线目录：
 cp -a .console-build/web/dist console-dist
-python3 backend/build.py
+python3 backend/build.py --console-dist console-dist --output backend-dist
 ```
 
-Python 3.12+，Node 22/npm，Bun 1.4.2。Go 使用 `backend/Dockerfile` 固定构建器，不要求主机安装 Go。上游必须为指定提交且干净，不能将下载的无 Git 源码快照冒充已验证 Git 工作树。后端构建含 Go 限流测试和两条路由实际接线检查。
+Python 3.12+，Node 22/npm，Bun 1.4.2。Go 使用 `backend/Dockerfile` 固定构建器，不要求主机安装 Go。上游必须为指定提交且干净，不能将下载的无 Git 源码快照冒充已验证 Git 工作树。后端构建包含会话限流、账户策略、API销售和上游缺陷的Go回归，并检查路由实际接线。
 
 重建后应运行真实隔离回归（所需 Playwright 及浏览器仅安装在验收环境）：
 
@@ -84,16 +84,16 @@ python3 tests/domain_preparation.py
 
 专项限流测试验证生产默认 20/1200；综合 UI/计费测试的临时 fixture 使用更大的关键请求额度，不能代替专项测试。均不得使用生产数据库或真实供应商 Key。
 
-`seal-build` 仅允许在不含 `data/` 的离线构建目录运行，核对来源后自动执行专项限流和综合集成回归；成功后关联控制台 manifest 的 `backend_image_id`，同步完整对应源码包及哈希。不能随意手工改哈希掩盖文件变化。当前已运行历史产物已具备此关联。
+`seal-build` 仅允许在不含 `data/` 的离线构建目录运行，核对来源后自动执行默认会话限流、账户安全、API-only页面/计费及上游缺陷回归；成功后关联控制台 manifest 的 `backend_image_id`，同步完整对应源码包及哈希。不能随意手工改哈希掩盖文件变化。不能直接用线上目录执行seal，也不能假定现有产物已经完成当前版本的关联。
 
 ```sh
-python3 deploy/release.py build --version v2026.09.21.1 \
+python3 deploy/release.py build --version v2026.09.21.2 \
   --output /path/to/new-release-directory
 ```
 
 版本输出目录必须不存在。发布器只收集源码白名单与控制台 manifest 中的资源，验证后端来源和镜像版本；不会打包业务数据、现场日志、历史交接材料或机器登录脚本。输出 `source/`（适合 Git）、`modelport/`（展开的离线包）、压缩包、清单、SHA256SUMS。
 
-新版本使用新标签，不覆盖旧发布。先在新的独立目录/端口用空库演练，再发布 Private Release；GitHub 自动生成的 Source code zip **不含**完整部署所需镜像与前端产物，请下载自定义应用附件。
+新版本使用新标签，不覆盖旧发布。先在新的独立目录/端口用空库演练，再发布经过内容检查的Release。公开前检查完整Git历史、源码和附件，排除业务数据、内部交接、机器登录脚本和秘密；不能只扫描当前工作树。GitHub自动生成的Source code zip **不含**完整部署所需镜像与前端产物，请下载自定义应用附件。公开发布不代表已切换任何现有运行环境。
 
 ## 升级与回滚
 

@@ -62,6 +62,7 @@ const profile: UserProfile = {
 }
 
 beforeEach(() => {
+  profile.role = 1
   vi.stubGlobal('localStorage', {
     getItem: () => null,
     setItem: () => undefined,
@@ -159,7 +160,37 @@ async function renderPage(path = '/security') {
 }
 
 describe('security page migration', () => {
+  it('ordinary users only mount password controls, even with a forged admin store', async () => {
+    useAuthStore.getState().auth.setUser({
+      ...profile,
+      role: 100,
+      permissions: { sidebar_settings: true },
+    })
+    await renderPage()
+    expect(
+      await screen.findByRole('button', { name: 'Change Password' })
+    ).toBeVisible()
+    expect(screen.getAllByRole('button')).toHaveLength(1)
+    for (const text of [
+      'Account Bindings',
+      'Sessions & Access',
+      'Passkey Login',
+      'Two-Factor Authentication',
+      'Record IP Address',
+      'Access Token',
+      'Delete Account',
+    ]) {
+      expect(screen.queryByText(text)).not.toBeInTheDocument()
+    }
+    const requests = vi.mocked(api.get).mock.calls.map(([url]) => url)
+    expect(requests).not.toContain('/api/user/passkey')
+    expect(requests).not.toContain('/api/user/2fa/status')
+    expect(requests).not.toContain('/api/user/sessions')
+    expect(requests).not.toContain('/api/user/token/status')
+  })
+
   it('places account management on the left and verification and privacy on the right', async () => {
+    profile.role = 10
     await renderPage()
     const login = await screen.findByRole('region', {
       name: 'Login & Authentication',
@@ -207,6 +238,7 @@ describe('security page migration', () => {
   })
 
   it('built-in and custom bindings share one compact responsive grid', async () => {
+    profile.role = 10
     await renderPage()
     const bindings = await screen.findByRole('list', {
       name: 'Account Bindings',

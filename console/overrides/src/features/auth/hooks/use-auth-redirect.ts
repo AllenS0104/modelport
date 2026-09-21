@@ -65,7 +65,7 @@ export function useAuthRedirect() {
 
       const targetPath =
         sanitizeAuthRedirect(redirectTo, window.location.origin) ??
-        (bundle.user.role >= 10 ? '/dashboard' : '/h5/#chat')
+        '/dashboard/models'
       // The product workspace is a separate same-origin document, not a React route.
       if (targetPath.startsWith('/h5/')) {
         window.location.replace(targetPath)

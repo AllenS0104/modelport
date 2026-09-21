@@ -69,7 +69,7 @@ export function useTopNavLinks(): TopNavLink[] {
 
   // Console -> /dashboard (new console path)
   if (modules?.console !== false) {
-    links.push({ title: t('Chat'), href: '/h5/#chat' })
+    links.push({ title: t('Dashboard'), href: '/dashboard/models' })
   }
 
   // Pricing

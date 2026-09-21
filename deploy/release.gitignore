@@ -13,12 +13,13 @@ evidence/
 *.key
 *.log
 compose.runtime.json
-# Reproducible inputs are pinned; build outputs are private Release assets.
+# Reproducible inputs are pinned; build outputs are reviewed Release assets.
 upstream/
 console-dist/
 backend-dist/
 .console-build/
 .backend-build/
+.backend-*/
 node_modules/
 __pycache__/
 *.pyc

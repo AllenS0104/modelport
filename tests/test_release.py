@@ -130,6 +130,38 @@ class ReleaseTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 release.archive_sources_ok(archive)
 
+    def test_source_archive_allows_only_selected_regressions(self):
+        required = ["upstream/LICENSE", "backend/auth-session-limits.patch", "console/build.py"]
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            archive = root / "source.tar.gz"
+            for extra in ["tests/api_sales.py", "tests/sales_scenarios.py",
+                          "tests/fixtures/issue_7498_test.go", "tests/private-customer.json"]:
+                names = required + [extra]
+                with tarfile.open(archive, "w:gz") as output:
+                    for name in names:
+                        path = root / name
+                        path.parent.mkdir(parents=True, exist_ok=True)
+                        path.write_bytes(b"fixture")
+                        member = tarfile.TarInfo(name)
+                        member.size = 7
+                        output.addfile(member, io.BytesIO(b"fixture"))
+                if extra in release.SOURCE_ARCHIVE_FILES:
+                    release.archive_sources_ok(archive, root)
+                    (root / extra).write_bytes(b"modified")
+                    with self.assertRaises(ValueError):
+                        release.archive_sources_ok(archive, root)
+                else:
+                    with self.assertRaises(ValueError):
+                        release.archive_sources_ok(archive, root)
+
+    def test_export_includes_api_only_fixtures_and_website_plan(self):
+        self.assertTrue({
+            "tests/api_sales.py", "tests/sales_scenarios.py",
+            "tests/upstream_issue_scenarios.py", "tests/account_security_restrictions.py",
+            "tests/fixtures/issue_7498_test.go", "docs/WEBSITE-CONTENT-PLAN.zh-CN.md",
+        } <= release.FILES)
+
     def test_initialize_secrets_and_isolation(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

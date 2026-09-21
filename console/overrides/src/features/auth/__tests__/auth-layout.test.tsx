@@ -45,9 +45,9 @@ describe('ModelPort account layout', () => {
       'href',
       '/h5/#guide'
     )
-    expect(screen.getByRole('link', { name: 'Chat' })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: 'Dashboard' })).toHaveAttribute(
       'href',
-      '/h5/#chat'
+      '/dashboard/models'
     )
     expect(screen.getByRole('link', { name: /Source code/ })).toHaveAttribute(
       'href',

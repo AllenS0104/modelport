@@ -18,7 +18,7 @@ python3 console/build.py
 
 下载的源码包保留 `upstream/` 完整源码快照但不包含 Git 数据库；执行上述固定提交校验前，可从官方 `https://github.com/QuantumNous/new-api` 获取该提交的 Git 工作树，核对包内快照，并在同一项目根目录保留 `console/`。依赖恢复使用锁文件，不能随意升级包或把另一上游版本直接套入覆盖层。
 
-`routes.conf` 从真实前端路由及兼容旧路径生成，只接管这些界面的 GET/HEAD；`/api/`、`/v1/`、`/pg/` 等仍使用原代理路径。脚本/CSS位于同源 `/console-assets/`。未知 API、SSE、Host 限制和旧 `/preview/` 不改变。没有 iframe、DOM 注入、代理改写响应、凭据转交或跨域绕过。
+`routes.conf` 从真实前端路由及兼容旧路径生成，只接管这些界面的 GET/HEAD；`/api/`和客户`/v1/`保留原生鉴权/转发。API-only版本禁用`/pg`，旧聊天、Playground和预览入口重定向；不提供网页聊天。脚本/CSS位于同源`/console-assets/`。没有iframe、DOM注入、凭据转交或跨域绕过。
 
 `build-manifest.json` 记录固定上游提交及所有资源哈希。`modelport-source.tar.gz` 提供完整固定上游源码、覆盖层、锁文件和本说明，可从网站页脚下载；原项目标识、版权、许可证及第三方构建 notice 保留。源代码包不包含客户数据、运行凭据、日志或备份。
 
@@ -26,19 +26,19 @@ python3 console/build.py
 
 ### 自助删号策略
 
-平台不开放用户自助删除账户。安全页覆盖层移除原生 `Account Actions` 删除卡片，仍保留修改密码、会话、MFA、Passkey、绑定与隐私设置。`nginx.conf` 同时在服务端入口拒绝 `DELETE /api/user/self`，返回 HTTP 403 和稳定错误码 `SELF_ACCOUNT_DELETION_DISABLED`；并非只隐藏按钮。匹配规范化 URI，覆盖编码、重复斜杠、尾斜杠和查询参数；旧页面及直接 HTTP 请求也不能通过本站入口自删。
+平台不开放用户自助删除账户。安全页覆盖层移除原生`Account Actions`删除卡片。普通用户只挂载密码操作卡片；管理员仍保留会话、控制台访问令牌、MFA、Passkey、绑定与隐私设置。这不是新增客户端管理权，服务端独立复用已认证角色并强制策略。策略详见`../ACCOUNT-SECURITY-RESTRICTIONS.zh-CN.md`；当前发布是否已部署到某个环境，应核对该环境的运行镜像，不能仅凭源码判断。Nginx和Go后端都拒绝`DELETE /api/user/self`，返回403及`SELF_ACCOUNT_DELETION_DISABLED`，并非只隐藏按钮。旧页面及直接HTTP请求也不能通过本站入口自删。
 
 账户查询/修改、撤销会话与 Key，以及原生管理员按权限管理账户的接口不受此规则影响。需关闭账户时由平台管理员处理，不能把自助删除当成钱包或账本的清理工具。
 
-**部署约束：New API 的原生自删处理器仍在官方镜像中，必须保持后端端口不对客户开放，所有客户流量经过受控 ingress。** 将来新增域名、负载均衡或另一入口时必须保留这一策略，不能直接暴露后端。域名准备器复制本规则，回归脚本检查其保留。回滚前端时也不得顺带撤销已经生效的删号禁令。
+**部署约束：即使Go后端有拒绝中间件，也不能开放后端端口，所有客户流量仍须经过受控ingress。** 新增域名、负载均衡或另一入口时必须保留策略；回滚前端不得撤销已生效的禁令。
 
 修改依据 OWASP [Authentication](https://cheatsheetseries.owasp.org/cheatsheets/Authentication_Cheat_Sheet.html) 与 [Session Management](https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html)：在服务端强制策略，不依赖前端隐藏；保留其他敏感操作的原生身份验证，不记录凭据。不声称因此完成整个平台的 ASVS 合规审计。
 
 - 官网和账户页沿用“模港 ModelPort”、MP标记、浅灰底、深蓝主按钮及绿色强调色；原生明确选择的其他主题和暗色仍保留。
 - 注册、登录、找回密码等复用共同 `AuthLayout`。管理员首次初始化显示相同产品标识，保留“初始化 New API”原始技术说明。
-- Key、钱包、消费、安全与管理页沿用原组件，只统一上方标识、配色和返回官网/聊天/教程的导航。业务页密集表格的布局不强行变成官网卡片。
-- 从 H5 登录后，经原有会话验证和 MFA（如启用）自动返回 `/h5/#chat`，新文档通过同源 HttpOnly refresh Cookie 恢复会话。令牌不放进 URL 或新增浏览器存储。
-- 未指定返回地址的普通客户登录默认进入聊天；管理员默认仍进管理控制台。已有安全重定向校验保留，外站目标不会被接纳。
+- Key、钱包、消费与管理页沿用原组件。普通用户常规导航仅数据看板、概览、API密钥、使用日志、任务日志；审计仅管理员可见，聊天与Playground入口移除。默认简体中文，保留用户明确选择的语言。
+- 经原有会话验证和MFA（如启用）后进入控制台；新文档通过同源HttpOnly refresh Cookie恢复会话，令牌不放进URL或新增浏览器存储。
+- 未指定返回地址时默认进入`/dashboard/models`；保留安全重定向校验，外站目标不会被接纳，旧聊天地址不会恢复网页聊天。
 - 品牌仍是工作名。改名时同步 H5 的 `body[data-brand]` 与 `src/components/platform-brand.tsx`，并重新构建；不通过客户数据库中的系统名去冒充另一套账户。
 
 复用的是既有 `AuthLayout`、`SystemBrand`、`PublicHeader`、`TopNav`、主题变量和表单组件。新组件 `PlatformBrand`/`PlatformAttribution` 只承载统一标识与来源，不重复实现表单、确认弹窗或权限逻辑。H5 与 React 是两个同源前端入口，因此这些入口之间使用完整文档导航，而不是让 React 路由渲染不存在的 `/h5/` 页面。
@@ -47,8 +47,9 @@ python3 console/build.py
 
 ## 验证与回滚
 
-- `bun run typecheck`、修改文件的 oxlint / oxfmt、`bun run test src/features/auth`。
-- 项目 `tests/chat_integration.py`：临时原生后端、真实注册登录与返回、客户/管理员界面、聊天/API同账本、退款及越权拒绝；不连接付费 AI。
+- `bun run typecheck`、修改文件的 oxlint / oxfmt、`bun run test src/features/auth src/features/security/__tests__/page.test.tsx`。
+- 新账户安全专项：`python3 tests/account_security_restrictions.py`，默认只挂载 `.console-build/web/dist` 到临时 ingress，绝不替换正在运行的 `console-dist/`。配套 Go 镜像按 `backend/README.md` 构建；发布必须单独授权并一起切换前后端，不能只藏按钮。
+- 当前集成入口为`tests/api_sales.py`：一次性后端、中文导航、模型删除、账户/Key权限、实际计费和隔离SMTP。`--extended-scenarios --upstream-issues`增加业务边界与缺陷回归；不使用真实供应商。`tests/chat_integration.py`仅保留供共享测试工具复用及历史参考，不是当前网页聊天放行标准。
 - `tests/console_interface.py`：手机/桌面账户页、Key、钱包、消费、安全、价目和管理员渠道/审计界面。
 - 多视口验收在单一IP上反复重载；仅临时测试后端设 `CRITICAL_RATE_LIMIT=200`，生产限流不改。默认20次/20分钟的关键请求限流曾真实返回429，不将其误判成Cookie互通失败，也不绕过生产限流。
 - 生产只读预览与 CSP 校验仍由 `tests/features_registration_model.py` 等执行；未初始化不代表这些功能已对真实客户开通。

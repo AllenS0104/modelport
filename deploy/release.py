@@ -25,6 +25,16 @@ FILES = {
     "tests/console_interface.py", "tests/public_site.py",
     "tests/session_controls.py", "tests/features_registration_model.py",
     "tests/domain_preparation.py", "tests/update_h5_csp.py",
+    "tests/api_sales.py", "tests/sales_scenarios.py", "tests/upstream_issue_scenarios.py",
+    "tests/account_security_restrictions.py", "tests/fixtures/issue_7498_test.go",
+    "ACCOUNT-SECURITY-RESTRICTIONS.zh-CN.md", "docs/WEBSITE-CONTENT-PLAN.zh-CN.md",
+}
+SOURCE_ARCHIVE_FILES = {
+    "ACCOUNT-SECURITY-RESTRICTIONS.zh-CN.md",
+    "tests/account_security_restrictions.py", "tests/auth_session_limits.py",
+    "tests/api_sales.py", "tests/sales_scenarios.py", "tests/upstream_issue_scenarios.py",
+    "tests/fixtures/issue_7498_test.go", "tests/chat_integration.py",
+    "tests/console_interface.py", "tests/public_site.py",
 }
 FORBIDDEN = {
     ".git", ".env", "data", "backups", "evidence", "node_modules",
@@ -103,10 +113,11 @@ def archive_sources_ok(path, root=None):
                 safe_name(member.name.rstrip("/"))
             if not member.isfile() and not member.isdir():
                 raise ValueError("Corresponding source contains a non-regular member")
-            if PurePosixPath(member.name).parts[0] not in {"upstream", "backend", "console"}:
+            top = PurePosixPath(member.name).parts[0]
+            if top not in {"upstream", "backend", "console"} and member.name not in SOURCE_ARCHIVE_FILES:
                 raise ValueError("Unexpected corresponding-source directory")
             names.add(member.name)
-            if root and member.isfile() and PurePosixPath(member.name).parts[0] in {"backend", "console"}:
+            if root and member.isfile() and (top in {"backend", "console"} or member.name in SOURCE_ARCHIVE_FILES):
                 source = checked_file(root, member.name)
                 if hashlib.sha256(archive.extractfile(member).read()).hexdigest() != digest(source):
                     raise ValueError(f"Corresponding source differs from maintained source: {member.name}")
@@ -236,15 +247,22 @@ def seal_build(root):
             raise ValueError(f"Unverified frontend change: {name}")
     source = root / "backend-dist/modelport-source.tar.gz"
     archive_sources_ok(source, root)
-    for test in ["auth_session_limits.py", "chat_integration.py"]:
+    checks = [
+        ("auth_session_limits.py", []),
+        ("account_security_restrictions.py", ["--console-dist", "console-dist"]),
+        ("api_sales.py", ["--site-root", ".", "--console-dist", "console-dist",
+                         "--extended-scenarios", "--upstream-issues"]),
+    ]
+    for test, options in checks:
         subprocess.run([sys.executable, str(root / "tests" / test),
-                        "--api-image", backend["image"]], cwd=root, check=True)
+                        "--api-image", backend["image_id"], *options], cwd=root, check=True)
     shutil.copyfile(source, root / "console-dist/modelport-source.tar.gz")
     frontend["backend_image_id"] = backend["image_id"]
+    frontend["frontend_only"] = False
     frontend["files"]["modelport-source.tar.gz"] = digest(source)
     (root / "console-dist/build-manifest.json").write_text(
         json.dumps(frontend, indent=2) + "\n", encoding="utf-8")
-    print("Offline build sealed after isolated account, limiter, billing and UI regressions.")
+    print("Offline build sealed after isolated API-only, account, limiter, billing and upstream-issue regressions.")
 
 
 def main():

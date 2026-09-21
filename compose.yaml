@@ -1,8 +1,8 @@
 name: api-sales-platform-local
 services:
   new-api:
-    # QuantumNous/new-api v1.0.0-rc.37 plus the maintained backend/ session-limiter patch.
-    image: modelport-new-api:auth-session-limits-v1
+    # Pinned New API: API-only sales, session limits and managed account security.
+    image: modelport-new-api:api-sales-v1
     platform: linux/amd64
     pull_policy: never
     user: "1000:1000"

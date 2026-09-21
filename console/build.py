@@ -74,7 +74,14 @@ def main():
             for member in original:
                 bundle.addfile(member, original.extractfile(member) if member.isfile() else None)
         for name in ['console', 'backend']:
-            bundle.add(ROOT / name, arcname=name)
+            bundle.add(ROOT / name, arcname=name,
+                       filter=lambda info: None if '__pycache__' in Path(info.name).parts else info)
+        for name in ['tests/account_security_restrictions.py', 'tests/auth_session_limits.py',
+                     'tests/api_sales.py',
+                     'tests/chat_integration.py', 'tests/console_interface.py', 'tests/public_site.py',
+                     'ACCOUNT-SECURITY-RESTRICTIONS.zh-CN.md']:
+            if (ROOT / name).is_file():
+                bundle.add(ROOT / name, arcname=name)
     archive.unlink()
     manifest = {
         'upstream_commit': UPSTREAM,

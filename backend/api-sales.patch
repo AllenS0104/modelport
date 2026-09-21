@@ -1,0 +1,38 @@
+diff --git a/router/api-router.go b/router/api-router.go
+--- a/router/api-router.go
++++ b/router/api-router.go
+@@ -129,6 +129,8 @@
+ 				selfRoute.POST("/waffo-pancake/pay", middleware.CriticalRateLimit(), controller.RequestWaffoPancakePay)
+ 				selfRoute.POST("/aff_transfer", middleware.UserCriticalRateLimit("aff-transfer"), controller.TransferAffQuota)
+ 				selfRoute.PUT("/setting", controller.UpdateUserSetting)
++				selfRoute.GET("/notification/email", controller.ModelPortEmailReadiness)
++				selfRoute.POST("/notification/email/test", middleware.UserCriticalRateLimit("notification-test"), controller.ModelPortTestEmail)
+ 
+ 				// 2FA routes
+ 				selfRoute.GET("/2fa/status", controller.Get2FAStatus)
+@@ -389,6 +391,7 @@
+ 			modelsRoute.GET("/sync_upstream/preview", controller.SyncUpstreamPreview)
+ 			modelsRoute.POST("/sync_upstream", controller.SyncUpstreamModels)
+ 			modelsRoute.POST("/delete", controller.BatchDeleteModelMeta)
++			modelsRoute.POST("/channel-only/delete", controller.ModelPortDeleteChannelModel)
+ 			modelsRoute.GET("/missing", controller.GetMissingModels)
+ 			modelsRoute.GET("/", controller.GetAllModelsMeta)
+ 			modelsRoute.GET("/search", controller.SearchModelsMeta)
+diff --git a/router/relay-router.go b/router/relay-router.go
+--- a/router/relay-router.go
++++ b/router/relay-router.go
+@@ -57,12 +57,13 @@
+ 	}
+ 
+ 	playgroundRouter := router.Group("/pg")
++	playgroundRouter.Use(controller.ModelPortWebChatDisabled)
+ 	playgroundRouter.Use(middleware.RouteTag("relay"))
+ 	playgroundRouter.Use(middleware.SystemPerformanceCheck())
+ 	playgroundRouter.Use(middleware.UserAuth(), middleware.Distribute())
+ 	{
+-		playgroundRouter.POST("/chat/completions", controller.Playground)
++		playgroundRouter.POST("/chat/completions", controller.ModelPortWebChatDisabled)
+ 	}
+ 	relayV1Router := router.Group("/v1")
+ 	relayV1Router.Use(middleware.RouteTag("relay"))
+ 	relayV1Router.Use(middleware.SystemPerformanceCheck())

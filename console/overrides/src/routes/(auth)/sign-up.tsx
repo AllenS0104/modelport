@@ -28,7 +28,7 @@ export const Route = createFileRoute('/(auth)/sign-up')({
 
     // 如果已经有用户信息，说明已登录，注册页对其无意义，跳转到 dashboard
     if (auth.user) {
-      const target = auth.user.role >= 10 ? '/dashboard' : '/h5/#chat'
+      const target = '/dashboard/models'
       throw redirect({
         href: target,
         reloadDocument: target.startsWith('/h5/'),
