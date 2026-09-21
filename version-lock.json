@@ -1,0 +1,40 @@
+{
+  "checked_at": "2026-09-17T12:08:01.094369+00:00",
+  "repository": "https://github.com/QuantumNous/new-api",
+  "tag": "v1.0.0-rc.37",
+  "commit": "385d2dfd10d821b25c8a6766bd16eea248cb1652",
+  "nginx_version": "nginx version: nginx/1.30.5",
+  "images": [
+    {
+      "reference": "calciumion/new-api@sha256:846a5b12f6b3a78acbf59201ffc1d4f0b31c701d252eff8238cefa6ab3643029",
+      "image_id": "sha256:846a5b12f6b3a78acbf59201ffc1d4f0b31c701d252eff8238cefa6ab3643029",
+      "architecture": "amd64",
+      "size_bytes": 76483855,
+      "labels": {
+        "org.opencontainers.image.created": "2026-09-11T15:18:58.607Z",
+        "org.opencontainers.image.description": "A unified AI model hub for aggregation & distribution. It supports cross-converting various LLMs into OpenAI-compatible, Claude-compatible, or Gemini-compatible formats. A centralized gateway for personal and enterprise model management.",
+        "org.opencontainers.image.licenses": "AGPL-3.0",
+        "org.opencontainers.image.revision": "385d2dfd10d821b25c8a6766bd16eea248cb1652",
+        "org.opencontainers.image.source": "https://github.com/QuantumNous/new-api",
+        "org.opencontainers.image.title": "new-api",
+        "org.opencontainers.image.url": "https://github.com/QuantumNous/new-api",
+        "org.opencontainers.image.version": "v1.0.0-rc.37"
+      }
+    },
+    {
+      "reference": "nginx@sha256:9874b7a098bbd4e9454941c9e3f87600d7a6e2bb081a06f453202933fe7520d1",
+      "image_id": "sha256:9874b7a098bbd4e9454941c9e3f87600d7a6e2bb081a06f453202933fe7520d1",
+      "architecture": "amd64",
+      "size_bytes": 28553251,
+      "labels": {
+        "maintainer": "NGINX Docker Maintainers <docker-maint@nginx.com>"
+      }
+    }
+  ],
+  "license_files": {
+    "LICENSE.new-api": "8486a10c4393cee1c25392769ddd3b2d6c242d6ec7928e1414efff7dfb2f07ef",
+    "NOTICE.new-api": "528067fcdf4f9d7e3fdb489d02cbdd36a0efa63fc2eb1686340612c26beb9f33",
+    "THIRD-PARTY-LICENSES.new-api.md": "8c819d10b444f9510cd5cd8633a9f119150b40dbbb0f2102b8ce03a22d58cf1e"
+  },
+  "signature_verification": "not performed; digest and OCI revision label checked"
+}

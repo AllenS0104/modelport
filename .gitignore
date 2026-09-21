@@ -1,0 +1,31 @@
+# Business state and secrets never belong in Git, including private repositories.
+data/
+backups/
+secrets/
+evidence/
+*.db
+*.db-*
+*.sqlite*
+*.env
+.env*
+.runtime.env
+*.pem
+*.key
+*.log
+compose.runtime.json
+# Reproducible inputs are pinned; build outputs are private Release assets.
+upstream/
+console-dist/
+backend-dist/
+.console-build/
+.backend-build/
+node_modules/
+__pycache__/
+*.pyc
+*.tar
+*.tar.gz
+*.zip
+releases/
+dist/
+# Generated domain drafts may contain host-specific configuration.
+deploy/*draft*/

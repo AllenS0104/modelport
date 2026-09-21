@@ -1,0 +1,83 @@
+name: api-sales-platform-local
+services:
+  new-api:
+    # QuantumNous/new-api v1.0.0-rc.37 plus the maintained backend/ session-limiter patch.
+    image: modelport-new-api:auth-session-limits-v1
+    platform: linux/amd64
+    pull_policy: never
+    user: "1000:1000"
+    working_dir: /data
+    command: ["--port", "3000", "--log-dir", "/tmp/logs"]
+    stop_grace_period: 130s
+    restart: "no"
+    environment:
+      TZ: Asia/Shanghai
+      SQLITE_PATH: "file:/data/one-api.db?_pragma=busy_timeout(30000)&_pragma=journal_mode(WAL)&_txlock=immediate"
+      TRUSTED_PROXIES: none
+      SESSION_COOKIE_SECURE: "false"
+      DEBUG: "false"
+      ERROR_LOG_ENABLED: "true"
+      BATCH_UPDATE_ENABLED: "false"
+      NODE_NAME: api-sales-local-only
+    volumes:
+      - ./data:/data
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=64m,mode=1777
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    pids_limit: 256
+    mem_limit: 1g
+    cpus: 2.0
+    logging:
+      driver: local
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks: [isolated]
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://127.0.0.1:3000/api/status | grep -q '\"success\":true'"]
+      interval: 15s
+      timeout: 5s
+      retries: 4
+      start_period: 30s
+  ingress:
+    # stable-alpine resolved on 2026-09-17; immutable linux/amd64 manifest.
+    image: nginx@sha256:9874b7a098bbd4e9454941c9e3f87600d7a6e2bb081a06f453202933fe7520d1
+    platform: linux/amd64
+    pull_policy: missing
+    user: "1000:1000"
+    entrypoint: ["nginx"]
+    command: ["-g", "daemon off;"]
+    restart: "no"
+    ports:
+      - "127.0.0.1:13000:8080"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./preview:/srv/h5-preview:ro
+      - ./h5:/srv/h5:ro
+      - ./console-dist:/srv/modelport-console:ro
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=32m,mode=1777
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    pids_limit: 64
+    mem_limit: 128m
+    cpus: 0.5
+    logging:
+      driver: none
+    networks: [ingress, isolated]
+    depends_on:
+      new-api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://127.0.0.1:8080/api/status | grep -q '\"success\":true'"]
+      interval: 15s
+      timeout: 5s
+      retries: 4
+      start_period: 15s
+networks:
+  ingress: {}
+  isolated:
+    internal: true

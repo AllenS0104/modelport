@@ -1,0 +1,13 @@
+diff --git a/router/api-router.go b/router/api-router.go
+--- a/router/api-router.go
++++ b/router/api-router.go
+@@ -73,7 +73,7 @@
+ 		userRoute := apiRouter.Group("/user")
+ 		{
+-			userRoute.POST("/auth/refresh", middleware.SessionCookieOriginGuard(), middleware.CriticalRateLimit(), middleware.DisableCache(), controller.RefreshAuth)
+-			userRoute.POST("/auth/logout", middleware.SessionCookieOriginGuard(), middleware.CriticalRateLimit(), middleware.DisableCache(), controller.AuthLogout)
++			userRoute.POST("/auth/refresh", middleware.SessionCookieOriginGuard(), middleware.SessionLifecycleRateLimit("refresh"), middleware.DisableCache(), controller.RefreshAuth)
++			userRoute.POST("/auth/logout", middleware.SessionCookieOriginGuard(), middleware.SessionLifecycleRateLimit("logout"), middleware.DisableCache(), controller.AuthLogout)
+ 			userRoute.POST("/register", middleware.CriticalRateLimit(), anonymousRequestBodyLimit, middleware.TurnstileCheck(), controller.Register)
+ 			userRoute.GET("/login/encryption-key", middleware.DisableCache(), controller.GetPasswordEncryptionKey)
+ 			userRoute.POST("/login", middleware.CriticalRateLimit(), middleware.DisableCache(), anonymousRequestBodyLimit, middleware.TurnstileCheck(), controller.Login)

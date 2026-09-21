@@ -1,0 +1,31 @@
+# NOT ACTIVE. Merge only after operator approval and inspection of existing ingress.
+# sales.example.invalid and certificate paths are deliberate non-working placeholders.
+# See DOMAIN-PLAN.zh-CN.md for mandatory backend Cookie/Origin/Host/network changes.
+# Include inside the existing http {} context after reviewing server/port conflicts.
+map $http_upgrade $api_platform_upgrade {
+    default upgrade;
+    '' close;
+}
+server {
+    listen 443 ssl;
+    server_name sales.example.invalid;
+    if ($host != sales.example.invalid) { return 444; }
+    absolute_redirect off;
+    ssl_certificate /REPLACE_WITH_PROTECTED_CERT_PATH/fullchain.pem;
+    ssl_certificate_key /REPLACE_WITH_PROTECTED_CERT_PATH/privkey.pem;
+    ssl_protocols TLSv1.2 TLSv1.3;
+    access_log off;
+    client_max_body_size 16m;
+    location = / { return 302 /h5/; }
+    location / {
+        proxy_pass http://127.0.0.1:13000;
+        proxy_http_version 1.1;
+        proxy_set_header Host $http_host;
+        proxy_set_header X-Forwarded-Proto https;
+        proxy_set_header X-Forwarded-For $remote_addr;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection $api_platform_upgrade;
+        proxy_buffering off;
+        proxy_read_timeout 180s;
+    }
+}
